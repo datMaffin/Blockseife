@@ -1,0 +1,18 @@
+# scala
+*.class
+
+# Intellij
+.idea
+*.iml
+
+# SBT
+target/
+
+# macOS
+.DS_Store
+
+# mypy
+.mypy_cache/
+
+# vim
+*.swp
