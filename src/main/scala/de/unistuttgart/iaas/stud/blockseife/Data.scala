@@ -15,4 +15,6 @@ object Data {
   final case class RawProblem(body: String)
 
   final case class SolverOutput(contentType: ContentType, byteStream: Source[ByteString, Any])
+
+  final case class Step(idx: Int, action: String, vars: List[String])
 }
