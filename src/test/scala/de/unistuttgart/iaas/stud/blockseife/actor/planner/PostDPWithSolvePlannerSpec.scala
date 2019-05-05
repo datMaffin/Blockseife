@@ -300,5 +300,10 @@ class PostDPWithSolvePlannerSpec
         Thread.sleep(2000) // wait for single request to prevent error messages
       }
     }
+    "a solve gets started" should {
+      "the correct domain and problem should be in the body of the solve request" ignore {
+        // TODO
+      }
+    }
   }
 }
