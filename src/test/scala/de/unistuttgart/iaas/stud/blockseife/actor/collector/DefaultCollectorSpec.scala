@@ -10,7 +10,7 @@ import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
 import de.unistuttgart.iaas.stud.blockseife.Data.Pddl_1_2_MinimalPredicates
 import de.unistuttgart.iaas.stud.blockseife.MyJsonSupport
-import de.unistuttgart.iaas.stud.blockseife.actor.collector.DefaultCollector.DefaultCollectorSettings
+import de.unistuttgart.iaas.stud.blockseife.actor.collector.DefaultCollector.Settings
 import org.mockito.{ArgumentMatchersSugar, IdiomaticMockito}
 import org.mockito.captor.ArgCaptor
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
@@ -41,7 +41,7 @@ class DefaultCollectorSpec
   // we need a mock system to mock http because system.log gets called
   private val mockSystem = mock[ExtendedActorSystem]
 
-  class HttpInjectedDefaultCollector(override val http: HttpExt, collectorSettings: DefaultCollectorSettings)
+  class HttpInjectedDefaultCollector(override val http: HttpExt, collectorSettings: Settings)
       extends DefaultCollector(collectorSettings)
 
   override def afterAll: Unit = {
@@ -64,10 +64,9 @@ class DefaultCollectorSpec
 
         val collector = system.actorOf(
           Props(
-            new HttpInjectedDefaultCollector(
-              mockHttp,
-              DefaultCollectorSettings(Uri("http://localhost:333"),
-                                       DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates))))
+            new HttpInjectedDefaultCollector(mockHttp,
+                                             Settings(Uri("http://localhost:333"),
+                                                      DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates))))
 
         val captor = ArgCaptor[HttpRequest]
         val probe  = TestProbe()
@@ -92,10 +91,9 @@ class DefaultCollectorSpec
 
         val collector = system.actorOf(
           Props(
-            new HttpInjectedDefaultCollector(
-              mockHttp,
-              DefaultCollectorSettings(Uri("http://localhost:333"),
-                                       DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates))))
+            new HttpInjectedDefaultCollector(mockHttp,
+                                             Settings(Uri("http://localhost:333"),
+                                                      DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates))))
 
         val captor = ArgCaptor[HttpRequest]
         val probe  = TestProbe()
@@ -120,10 +118,9 @@ class DefaultCollectorSpec
 
         val collector = system.actorOf(
           Props(
-            new HttpInjectedDefaultCollector(
-              mockHttp,
-              DefaultCollectorSettings(Uri("http://localhost:333"),
-                                       DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates))))
+            new HttpInjectedDefaultCollector(mockHttp,
+                                             Settings(Uri("http://localhost:333"),
+                                                      DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates))))
 
         val captor = ArgCaptor[HttpRequest]
         val probe  = TestProbe()
@@ -145,10 +142,9 @@ class DefaultCollectorSpec
 
         val collector = system.actorOf(
           Props(
-            new HttpInjectedDefaultCollector(
-              mockHttp,
-              DefaultCollectorSettings(Uri("http://localhost:333"),
-                                       DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates))))
+            new HttpInjectedDefaultCollector(mockHttp,
+                                             Settings(Uri("http://localhost:333"),
+                                                      DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates))))
 
         val captor = ArgCaptor[HttpRequest]
         val probe  = TestProbe()
@@ -171,10 +167,9 @@ class DefaultCollectorSpec
 
       val collector = system.actorOf(
         Props(
-          new HttpInjectedDefaultCollector(
-            mockHttp,
-            DefaultCollectorSettings(Uri("http://localhost:333/validurl"),
-                                     DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates))))
+          new HttpInjectedDefaultCollector(mockHttp,
+                                           Settings(Uri("http://localhost:333/validurl"),
+                                                    DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates))))
 
       "return no message for 'get object' to the sender" in {
 

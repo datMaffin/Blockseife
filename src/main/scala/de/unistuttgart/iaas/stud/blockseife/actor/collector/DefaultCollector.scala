@@ -7,16 +7,16 @@ import akka.http.scaladsl.unmarshalling.Unmarshal
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings, Materializer}
 import de.unistuttgart.iaas.stud.blockseife.Data.{NotSupportedPredicates, Pddl_1_2_MinimalPredicates, Predicates}
 import de.unistuttgart.iaas.stud.blockseife.MyJsonSupport
-import de.unistuttgart.iaas.stud.blockseife.actor.collector.DefaultCollector.DefaultCollectorSettings
+import de.unistuttgart.iaas.stud.blockseife.actor.collector.DefaultCollector.Settings
 import spray.json.JsValue
 
 import scala.concurrent.{ExecutionContext, Future}
 import scala.util.{Failure, Success}
 
 object DefaultCollector extends MyJsonSupport {
-  def props(collectorSetting: DefaultCollectorSettings): Props = Props(new DefaultCollector(collectorSetting))
+  def props(collectorSetting: Settings): Props = Props(new DefaultCollector(collectorSetting))
 
-  final case class DefaultCollectorSettings(
+  final case class Settings(
       collectorUrl: Uri,
       unmarshallHttpResponseToPredicates: HttpResponse => Future[Predicates]
   )
@@ -42,7 +42,7 @@ object DefaultCollector extends MyJsonSupport {
   }
 }
 
-class DefaultCollector(collectorSettings: DefaultCollectorSettings) extends Actor with ActorLogging with MyJsonSupport {
+class DefaultCollector(collectorSettings: Settings) extends Actor with ActorLogging with MyJsonSupport {
 
   val http                      = Http(context.system)
   implicit val executionContext = context.system.dispatcher
