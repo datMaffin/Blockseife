@@ -3,10 +3,10 @@ package de.unistuttgart.iaas.stud.blockseife.actor.planner
 import akka.actor.{Actor, ActorLogging, Props}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.Marshal
-import akka.http.scaladsl.model.{HttpMethod, HttpMethods, HttpRequest, RequestEntity, Uri}
 import akka.http.scaladsl.model.RequestEntityAcceptance.Tolerated
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
+import akka.http.scaladsl.model._
 import akka.stream.scaladsl.Sink
+import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import de.unistuttgart.iaas.stud.blockseife.Data.{RawDomain, RawProblem, SolverOutput}
 import de.unistuttgart.iaas.stud.blockseife.actor.planner.PostDPInstantlyPlanner.Settings
 

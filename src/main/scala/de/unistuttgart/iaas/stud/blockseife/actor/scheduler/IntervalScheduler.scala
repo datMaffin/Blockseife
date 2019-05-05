@@ -1,18 +1,15 @@
 package de.unistuttgart.iaas.stud.blockseife.actor.scheduler
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props, Timers}
+import akka.actor.{Actor, ActorLogging, Props, Timers}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model.{HttpMethods, HttpRequest, RequestEntity, Uri}
 import akka.stream.scaladsl.{Keep, Sink, SinkQueueWithCancel, Source}
 import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
-import de.unistuttgart.iaas.stud.blockseife.Data.{Predicates, Step}
+import de.unistuttgart.iaas.stud.blockseife.Data.Step
 import de.unistuttgart.iaas.stud.blockseife.MyJsonSupport
-import de.unistuttgart.iaas.stud.blockseife.actor.collector
 import de.unistuttgart.iaas.stud.blockseife.actor.scheduler.IntervalScheduler.Settings
-import de.unistuttgart.iaas.stud.blockseife.parser.ParsedDomain
 
-import scala.concurrent.Future
 import scala.concurrent.duration.FiniteDuration
 import scala.util.{Failure, Success}
 

@@ -4,8 +4,8 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props, Timers}
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.marshalling.Marshal
 import akka.http.scaladsl.model.{HttpMethods, HttpRequest, RequestEntity, Uri}
-import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import akka.stream.scaladsl.{Keep, Sink, SinkQueueWithCancel, Source}
+import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import de.unistuttgart.iaas.stud.blockseife.Data.{Predicates, Step}
 import de.unistuttgart.iaas.stud.blockseife.MyJsonSupport
 import de.unistuttgart.iaas.stud.blockseife.actor.collector

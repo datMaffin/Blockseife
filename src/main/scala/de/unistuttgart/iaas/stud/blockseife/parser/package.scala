@@ -1,21 +1,7 @@
 package de.unistuttgart.iaas.stud.blockseife
 
 import de.unistuttgart.iaas.stud.blockseife.Data.{Pddl_1_2_MinimalPredicates, Predicates, RawDomain, Step}
-import de.unistuttgart.iaas.stud.blockseife.parser.domains.pddl._1._2.minimal.{
-  ActionDef,
-  ActionDefBody,
-  AtomicFormulaTerms,
-  DomainCompiler,
-  DomainLexerError,
-  DomainParserError,
-  DomainRoot,
-  GoalDescription,
-  GoalDescriptionAnd,
-  Name,
-  NegatedAtomicFormulaTerms,
-  Term,
-  Variable
-}
+import de.unistuttgart.iaas.stud.blockseife.parser.domains.pddl._1._2.minimal._
 import spray.json.{JsArray, JsBoolean, JsObject, JsString, JsValue}
 
 import scala.collection.mutable

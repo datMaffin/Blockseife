@@ -2,10 +2,10 @@ package de.unistuttgart.iaas.stud.blockseife.converter.to
 
 import akka.NotUsed
 import akka.http.scaladsl.HttpExt
-import akka.http.scaladsl.model.{ContentType, ContentTypes, HttpEntity, HttpRequest, Uri}
+import akka.http.scaladsl.model._
 import akka.http.scaladsl.unmarshalling.Unmarshal
-import akka.stream.{ActorMaterializer, Materializer}
 import akka.stream.scaladsl.{Framing, Source}
+import akka.stream.{ActorMaterializer, Materializer}
 import akka.util.ByteString
 import de.unistuttgart.iaas.stud.blockseife.Data.{SolverOutput, Step}
 import de.unistuttgart.iaas.stud.blockseife.MyJsonSupport
