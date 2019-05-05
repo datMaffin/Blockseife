@@ -2,21 +2,21 @@ package de.unistuttgart.iaas.stud.blockseife.actor.planner
 
 import akka.actor.{ActorSystem, ExtendedActorSystem, Props}
 import akka.http.scaladsl.HttpExt
-import akka.http.scaladsl.model.{ContentTypes, HttpEntity, HttpRequest, HttpResponse, Uri}
+import akka.http.scaladsl.model._
 import akka.stream.scaladsl.Source
 import akka.testkit.{TestKit, TestProbe}
 import akka.util.ByteString
 import de.unistuttgart.iaas.stud.blockseife.Data.{RawDomain, RawProblem}
 import de.unistuttgart.iaas.stud.blockseife.MyJsonSupport
-import org.mockito.{ArgumentMatchersSugar, IdiomaticMockito}
 import org.mockito.captor.ArgCaptor
+import org.mockito.{ArgumentMatchersSugar, IdiomaticMockito}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 
-import scala.concurrent.duration._
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
-class PostDPInstantlyPlannerSpec
-    extends TestKit(ActorSystem("PostDPInstantlyPlannerSpec"))
+class PostDPWithSolvePlannerSpec
+    extends TestKit(ActorSystem("PostDPWithSolvePlannerSpec"))
     with WordSpecLike
     with Matchers
     with IdiomaticMockito
@@ -29,8 +29,8 @@ class PostDPInstantlyPlannerSpec
   // we need a mock system to mock http because system.log gets called
   private val mockSystem = mock[ExtendedActorSystem]
 
-  class HttpInjectedPlanner(override val http: HttpExt, plannerSettings: PostDPInstantlyPlanner.Settings)
-      extends PostDPInstantlyPlanner(plannerSettings)
+  class HttpInjectedPlanner(override val http: HttpExt, plannerSettings: PostDPWithSolvePlanner.Settings)
+      extends PostDPWithSolvePlanner(plannerSettings)
 
   override def afterAll: Unit = {
     TestKit.shutdownActorSystem(system)
@@ -41,15 +41,10 @@ class PostDPInstantlyPlannerSpec
     "no domain or problem was sent" should {
 
       val mockHttp = mock[HttpExt]
-      mockHttp.system shouldReturn mockSystem
-
-      mockHttp.singleRequest(*, *, *, *) shouldReturn Future(
-        HttpResponse(entity = HttpEntity(contentType = ContentTypes.`application/json`, data = Source.empty))
-      )
 
       val planner =
         system.actorOf(
-          Props(new HttpInjectedPlanner(mockHttp, PostDPInstantlyPlanner.Settings(Uri("http://localhost:333"))))
+          Props(new HttpInjectedPlanner(mockHttp, PostDPWithSolvePlanner.Settings(Uri("http://localhost:333"))))
         )
 
       "answer with the correct response to 'check id' message" in {
@@ -70,15 +65,10 @@ class PostDPInstantlyPlannerSpec
     "no domain was sent" should {
 
       val mockHttp = mock[HttpExt]
-      mockHttp.system shouldReturn mockSystem
-
-      mockHttp.singleRequest(*, *, *, *) shouldReturn Future(
-        HttpResponse(entity = HttpEntity(contentType = ContentTypes.`application/json`, data = Source.empty))
-      )
 
       val planner =
         system.actorOf(
-          Props(new HttpInjectedPlanner(mockHttp, PostDPInstantlyPlanner.Settings(Uri("http://localhost:333"))))
+          Props(new HttpInjectedPlanner(mockHttp, PostDPWithSolvePlanner.Settings(Uri("http://localhost:333"))))
         )
 
       val placeholderActor = TestProbe()
@@ -111,15 +101,10 @@ class PostDPInstantlyPlannerSpec
     "no problem was sent" should {
 
       val mockHttp = mock[HttpExt]
-      mockHttp.system shouldReturn mockSystem
-
-      mockHttp.singleRequest(*, *, *, *) shouldReturn Future(
-        HttpResponse(entity = HttpEntity(contentType = ContentTypes.`application/json`, data = Source.empty))
-      )
 
       val planner =
         system.actorOf(
-          Props(new HttpInjectedPlanner(mockHttp, PostDPInstantlyPlanner.Settings(Uri("http://localhost:333"))))
+          Props(new HttpInjectedPlanner(mockHttp, PostDPWithSolvePlanner.Settings(Uri("http://localhost:333"))))
         )
 
       val placeholderActor = TestProbe()
@@ -154,13 +139,16 @@ class PostDPInstantlyPlannerSpec
       val mockHttp = mock[HttpExt]
       mockHttp.system shouldReturn mockSystem
 
-      mockHttp.singleRequest(*, *, *, *) shouldReturn Future(
-        HttpResponse(entity = HttpEntity(contentType = ContentTypes.`application/json`, data = Source.empty))
-      )
-
+      mockHttp.singleRequest(*, *, *, *) shouldReturn Future {
+        Thread.sleep(2000) // wait 4 * 500ms for slow pcs
+        HttpResponse(
+          entity =
+            HttpEntity(contentType = ContentTypes.`application/json`, data = Source.single(ByteString("testing")))
+        )
+      }
       val planner =
         system.actorOf(
-          Props(new HttpInjectedPlanner(mockHttp, PostDPInstantlyPlanner.Settings(Uri("http://localhost:333"))))
+          Props(new HttpInjectedPlanner(mockHttp, PostDPWithSolvePlanner.Settings(Uri("http://localhost:333"))))
         )
 
       val placeholderActor = TestProbe()
@@ -191,68 +179,15 @@ class PostDPInstantlyPlannerSpec
         }, 2.seconds)
 
       }
-      "domain should be posted to correct url" in {
-
-        val localMockHttp = mock[HttpExt]
-        localMockHttp.system shouldReturn mockSystem
-
-        localMockHttp.singleRequest(*, *, *, *) shouldReturn Future(
-          HttpResponse(entity = HttpEntity(contentType = ContentTypes.`application/json`, data = Source.empty))
-        )
-
-        val localPlanner =
-          system.actorOf(
-            Props(new HttpInjectedPlanner(localMockHttp, PostDPInstantlyPlanner.Settings(Uri("http://localhost:333"))))
-          )
-
-        val localCaptor = ArgCaptor[HttpRequest]
-        val localProbe  = TestProbe()
-
-        localPlanner.tell(PostDomain(RawDomain(""), 0), localProbe.ref)
-
-        awaitAssert({ localMockHttp.singleRequest(localCaptor.capture, *, *, *) wasCalled once }, 5.seconds)
-
-        localCaptor.value.uri shouldBe Uri("http://localhost:333/domain")
-
-      }
-      "problem should be posted to correct url" in {
-
-        val localMockHttp = mock[HttpExt]
-        localMockHttp.system shouldReturn mockSystem
-
-        localMockHttp.singleRequest(*, *, *, *) shouldReturn Future(
-          HttpResponse(entity = HttpEntity(contentType = ContentTypes.`application/json`, data = Source.empty))
-        )
-
-        val localPlanner =
-          system.actorOf(
-            Props(new HttpInjectedPlanner(localMockHttp, PostDPInstantlyPlanner.Settings(Uri("http://localhost:333"))))
-          )
-
-        val localCaptor = ArgCaptor[HttpRequest]
-        val localProbe  = TestProbe()
-
-        localPlanner.tell(PostProblem(RawProblem(""), 0), localProbe.ref)
-
-        awaitAssert({ localMockHttp.singleRequest(localCaptor.capture, *, *, *) wasCalled once }, 5.seconds)
-
-        localCaptor.value.uri shouldBe Uri("http://localhost:333/problem")
-
-      }
     }
 
     "wrong domain and problem were sent and no solve attempted" should {
 
       val mockHttp = mock[HttpExt]
-      mockHttp.system shouldReturn mockSystem
-
-      mockHttp.singleRequest(*, *, *, *) shouldReturn Future(
-        HttpResponse(entity = HttpEntity(contentType = ContentTypes.`application/json`, data = Source.empty))
-      )
 
       val planner =
         system.actorOf(
-          Props(new HttpInjectedPlanner(mockHttp, PostDPInstantlyPlanner.Settings(Uri("http://localhost:333"))))
+          Props(new HttpInjectedPlanner(mockHttp, PostDPWithSolvePlanner.Settings(Uri("http://localhost:333"))))
         )
 
       val placeholderActor = TestProbe()
@@ -349,7 +284,7 @@ class PostDPInstantlyPlannerSpec
 
       val planner =
         system.actorOf(
-          Props(new HttpInjectedPlanner(mockHttp, PostDPInstantlyPlanner.Settings(Uri("http://localhost:333"))))
+          Props(new HttpInjectedPlanner(mockHttp, PostDPWithSolvePlanner.Settings(Uri("http://localhost:333"))))
         )
 
       val placeholderActor = TestProbe()
