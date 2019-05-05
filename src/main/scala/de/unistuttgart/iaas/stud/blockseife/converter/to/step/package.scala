@@ -41,8 +41,8 @@ package object step extends MyJsonSupport {
       })
   }
 
-  def restStepConverter(contentType: ContentType, byteStringSource: Source[ByteString, Any])(restUrl: Uri,
-                                                                                             http: HttpExt)(
+  def restStepsConverter(contentType: ContentType, byteStringSource: Source[ByteString, Any])(restUrl: Uri,
+                                                                                              http: HttpExt)(
       implicit executionContext: ExecutionContext,
       materializer: ActorMaterializer): Source[Step, Future[NotUsed]] = {
 

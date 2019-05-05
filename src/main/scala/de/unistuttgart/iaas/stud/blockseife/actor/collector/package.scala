@@ -34,4 +34,8 @@ package object collector {
   //
   // Custom exceptions thrown by collector actors
   // ============================================
+
+  /** This error gets thrown when either the http request or the unmarshalling failed */
+  case object CommunicationWithExternalCollectorServiceFailed
+      extends Throwable("This error gets thrown when either the http request or the unmarshalling failed")
 }

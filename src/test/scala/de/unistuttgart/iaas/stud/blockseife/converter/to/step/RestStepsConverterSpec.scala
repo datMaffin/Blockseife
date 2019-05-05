@@ -1,4 +1,4 @@
-package de.unistuttgart.iaas.stud.blockseife.converter
+package de.unistuttgart.iaas.stud.blockseife.converter.to.step
 
 import akka.NotUsed
 import akka.actor.{ActorSystem, ExtendedActorSystem}
@@ -11,13 +11,13 @@ import akka.testkit.TestKit
 import akka.util.ByteString
 import de.unistuttgart.iaas.stud.blockseife.Data.Step
 import de.unistuttgart.iaas.stud.blockseife.MyJsonSupport
-import de.unistuttgart.iaas.stud.blockseife.converter.to.step.restStepConverter
 import org.mockito.{ArgumentMatchersSugar, IdiomaticMockito}
 import org.scalatest.{BeforeAndAfterAll, Matchers, WordSpecLike}
 import spray.json._
+
 import scala.concurrent.Future
 
-class RestStepConverterSpec
+class RestStepsConverterSpec
     extends TestKit(ActorSystem("RestStepConverterSpec"))
     with WordSpecLike
     with Matchers
@@ -55,8 +55,8 @@ class RestStepConverterSpec
 
       // no real data required; we are mocking the http response
       val srcOfSteps: Source[Step, Future[NotUsed]] =
-        restStepConverter(ContentTypes.NoContentType, Source(List(ByteString(""))))(Uri("http://localhost:333"),
-                                                                                    mockHttp)
+        restStepsConverter(ContentTypes.NoContentType, Source(List(ByteString(""))))(Uri("http://localhost:333"),
+                                                                                     mockHttp)
 
       // Use the test sink subscriber to enable checking the results
       val sub = srcOfSteps.toMat(TestSink.probe[Step])(Keep.right).run()

@@ -1,4 +1,4 @@
-package de.unistuttgart.iaas.stud.blockseife.converter
+package de.unistuttgart.iaas.stud.blockseife.converter.to.step
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.model.ContentTypes
@@ -9,7 +9,6 @@ import akka.testkit.TestKit
 import akka.util.ByteString
 import de.unistuttgart.iaas.stud.blockseife.Data.{SolverOutput, Step}
 import de.unistuttgart.iaas.stud.blockseife.MyJsonSupport
-import de.unistuttgart.iaas.stud.blockseife.converter.to.step.rawFFOutputStepsConverter
 import org.scalatest.{BeforeAndAfterAll, WordSpecLike}
 
 class RawFFOutputStepsConverterSpec
