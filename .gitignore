@@ -16,3 +16,9 @@ target/
 
 # vim
 *.swp
+
+# bloop
+.bloop/
+
+# metals language server
+.metals/
