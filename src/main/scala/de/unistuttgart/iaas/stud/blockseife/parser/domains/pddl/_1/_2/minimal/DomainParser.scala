@@ -196,15 +196,17 @@ object DomainParser extends Parsers {
       opt(safetyDef) ~
       rep(structureDef) ~ RIGHTBRACKET() ^^ {
       case _ ~ _ ~ _ ~ _ ~ name ~ _ ~ _ ~ requireDef ~ typesDef ~ constantsDef ~ domainVarsDef ~ predicatesDef ~ timelessDef ~ safetyDef ~ structureDefs ~ _ =>
-        DomainRoot(name,
-                   requireDef,
-                   typesDef,
-                   constantsDef,
-                   domainVarsDef,
-                   predicatesDef,
-                   timelessDef,
-                   safetyDef,
-                   structureDefs)
+        DomainRoot(
+          name,
+          requireDef,
+          typesDef,
+          constantsDef,
+          domainVarsDef,
+          predicatesDef,
+          timelessDef,
+          safetyDef,
+          structureDefs
+        )
     }
   }
 

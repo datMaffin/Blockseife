@@ -63,7 +63,7 @@ class PostDPInstantlyPlanner(plannerSetting: Settings) extends Actor with ActorL
               method = HttpMethods.POST,
               uri = plannerSetting.solverUrl + "/domain",
               entity = entity
-          )
+            )
         )
         .map(request => http.singleRequest(request))
         .flatten
@@ -85,7 +85,7 @@ class PostDPInstantlyPlanner(plannerSetting: Settings) extends Actor with ActorL
               method = HttpMethods.POST,
               uri = plannerSetting.solverUrl + "/problem",
               entity = entity
-          )
+            )
         )
         .map(request => http.singleRequest(request))
         .flatten

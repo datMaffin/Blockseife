@@ -141,7 +141,8 @@ class Pipeline(pipelineSettings: Settings) extends Actor with Timers with ActorL
         case (UsePreconditionCheckingScheduler(s: PreconditionCheckingScheduler.Settings), Some(parsedDomain)) =>
           Some(
             context.actorOf(
-              PreconditionCheckingScheduler.props(collectorActor, toStepConverter(solverOutput), parsedDomain, s))
+              PreconditionCheckingScheduler.props(collectorActor, toStepConverter(solverOutput), parsedDomain, s)
+            )
           )
         //case s @ UseRestScheduler(_, _)   => scheduler = context.actorOf(RestScheduler.props(s, collector))
       }

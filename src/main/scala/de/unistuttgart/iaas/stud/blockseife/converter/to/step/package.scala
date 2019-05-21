@@ -41,10 +41,10 @@ package object step extends MyJsonSupport {
       })
   }
 
-  def restStepsConverter(contentType: ContentType, byteStringSource: Source[ByteString, Any])(restUrl: Uri,
-                                                                                              http: HttpExt)(
-      implicit executionContext: ExecutionContext,
-      materializer: ActorMaterializer): Source[Step, Future[NotUsed]] = {
+  def restStepsConverter(contentType: ContentType, byteStringSource: Source[ByteString, Any])(
+      restUrl: Uri,
+      http: HttpExt
+  )(implicit executionContext: ExecutionContext, materializer: ActorMaterializer): Source[Step, Future[NotUsed]] = {
 
     // create the request entity with the data from the solver response
     val httpEntity     = HttpEntity(contentType, byteStringSource)
@@ -52,6 +52,7 @@ package object step extends MyJsonSupport {
     val responseFuture = http.singleRequest(httpRequest)
 
     Source.fromFutureSource(
-      responseFuture.map(response => Unmarshal(response.entity).to[Source[Step, NotUsed]]).flatten)
+      responseFuture.map(response => Unmarshal(response.entity).to[Source[Step, NotUsed]]).flatten
+    )
   }
 }

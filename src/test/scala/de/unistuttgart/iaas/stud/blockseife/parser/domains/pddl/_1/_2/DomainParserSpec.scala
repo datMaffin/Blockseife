@@ -63,7 +63,7 @@ class DomainParserSpec extends WordSpec with Matchers {
         case Right(ast: DomainRoot) =>
           ast.structureDefs.size shouldBe 2
           ast.structureDefs(0) match {
-            case ActionDef(actionFunctor, typedListVariable, body) => 
+            case ActionDef(actionFunctor, typedListVariable, body) =>
               actionFunctor shouldBe "SWITCH_LIGHT_ON"
 
               typedListVariable.size shouldBe 1
@@ -72,31 +72,31 @@ class DomainParserSpec extends WordSpec with Matchers {
               body.preconditionGoalDescription.get match {
                 case AtomicFormulaTerms(predicate, terms) => fail()
                 case GoalDescriptionAnd(goalDescriptions) => fail()
-                case NegatedAtomicFormulaTerms(predicate, terms) => 
+                case NegatedAtomicFormulaTerms(predicate, terms) =>
                   predicate shouldBe "LIGHT_ON"
                   terms.size shouldBe 1
                   terms(0) match {
-                    case Name(name) => fail()
+                    case Name(name)         => fail()
                     case Variable(variable) => variable shouldBe "X"
                   }
               }
 
               body.effect.get match {
-                case AtomicFormulaTerms(predicate, terms) => 
+                case AtomicFormulaTerms(predicate, terms) =>
                   predicate shouldBe "LIGHT_ON"
                   terms.size shouldBe 1
                   terms(0) match {
-                    case Name(name) => fail()
+                    case Name(name)         => fail()
                     case Variable(variable) => variable shouldBe "X"
                   }
-                case EffectAnd(effects) => fail()
+                case EffectAnd(effects)                          => fail()
                 case NegatedAtomicFormulaTerms(predicate, terms) => fail()
               }
 
             case _ => fail()
           }
           ast.structureDefs(1) match {
-            case ActionDef(actionFunctor, typedListVariable, body) => 
+            case ActionDef(actionFunctor, typedListVariable, body) =>
               actionFunctor shouldBe "SWITCH_LIGHT_OFF"
 
               typedListVariable.size shouldBe 1
@@ -107,21 +107,21 @@ class DomainParserSpec extends WordSpec with Matchers {
                   predicate shouldBe "LIGHT_ON"
                   terms.size shouldBe 1
                   terms(0) match {
-                    case Name(name) => fail()
+                    case Name(name)         => fail()
                     case Variable(variable) => variable shouldBe "X"
                   }
-                case GoalDescriptionAnd(goalDescriptions) => fail()
+                case GoalDescriptionAnd(goalDescriptions)        => fail()
                 case NegatedAtomicFormulaTerms(predicate, terms) => fail()
               }
 
               body.effect.get match {
                 case AtomicFormulaTerms(predicate, terms) => fail()
-                case EffectAnd(effects) => fail()
+                case EffectAnd(effects)                   => fail()
                 case NegatedAtomicFormulaTerms(predicate, terms) =>
                   predicate shouldBe "LIGHT_ON"
                   terms.size shouldBe 1
                   terms(0) match {
-                    case Name(name) => fail()
+                    case Name(name)         => fail()
                     case Variable(variable) => variable shouldBe "X"
                   }
               }

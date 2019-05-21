@@ -51,12 +51,15 @@ class RestStepsConverterSpec
 
       // mock the http call to return the steps
       mockHttp.singleRequest(*, *, *, *) shouldReturn Future(
-        HttpResponse(entity = HttpEntity(contentType = ContentTypes.`application/json`, data = byteStream)))
+        HttpResponse(entity = HttpEntity(contentType = ContentTypes.`application/json`, data = byteStream))
+      )
 
       // no real data required; we are mocking the http response
       val srcOfSteps: Source[Step, Future[NotUsed]] =
-        restStepsConverter(ContentTypes.NoContentType, Source(List(ByteString(""))))(Uri("http://localhost:333"),
-                                                                                     mockHttp)
+        restStepsConverter(ContentTypes.NoContentType, Source(List(ByteString(""))))(
+          Uri("http://localhost:333"),
+          mockHttp
+        )
 
       // Use the test sink subscriber to enable checking the results
       val sub = srcOfSteps.toMat(TestSink.probe[Step])(Keep.right).run()

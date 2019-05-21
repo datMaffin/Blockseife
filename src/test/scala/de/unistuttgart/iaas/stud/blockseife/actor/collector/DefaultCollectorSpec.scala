@@ -27,7 +27,8 @@ class DefaultCollectorSpec
     akka.stdout-loglevel = "OFF"
     akka.loglevel = "OFF"
   """)
-      ))
+      )
+    )
     with WordSpecLike
     with Matchers
     with IdiomaticMockito
@@ -59,14 +60,18 @@ class DefaultCollectorSpec
 
         mockHttp.singleRequest(*, *, *, *) shouldReturn Future(
           HttpResponse(
-            entity = HttpEntity(contentType = ContentTypes.`application/json`, data = Source.single(ByteString("[]"))))
+            entity = HttpEntity(contentType = ContentTypes.`application/json`, data = Source.single(ByteString("[]")))
+          )
         )
 
         val collector = system.actorOf(
           Props(
-            new HttpInjectedDefaultCollector(mockHttp,
-                                             Settings(Uri("http://localhost:333"),
-                                                      DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates))))
+            new HttpInjectedDefaultCollector(
+              mockHttp,
+              Settings(Uri("http://localhost:333"), DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates)
+            )
+          )
+        )
 
         val captor = ArgCaptor[HttpRequest]
         val probe  = TestProbe()
@@ -86,14 +91,18 @@ class DefaultCollectorSpec
 
         mockHttp.singleRequest(*, *, *, *) shouldReturn Future(
           HttpResponse(
-            entity = HttpEntity(contentType = ContentTypes.`application/json`, data = Source.single(ByteString("{}"))))
+            entity = HttpEntity(contentType = ContentTypes.`application/json`, data = Source.single(ByteString("{}")))
+          )
         )
 
         val collector = system.actorOf(
           Props(
-            new HttpInjectedDefaultCollector(mockHttp,
-                                             Settings(Uri("http://localhost:333"),
-                                                      DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates))))
+            new HttpInjectedDefaultCollector(
+              mockHttp,
+              Settings(Uri("http://localhost:333"), DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates)
+            )
+          )
+        )
 
         val captor = ArgCaptor[HttpRequest]
         val probe  = TestProbe()
@@ -113,14 +122,18 @@ class DefaultCollectorSpec
 
         mockHttp.singleRequest(*, *, *, *) shouldReturn Future(
           HttpResponse(
-            entity = HttpEntity(contentType = ContentTypes.`application/json`, data = Source.single(ByteString("[]"))))
+            entity = HttpEntity(contentType = ContentTypes.`application/json`, data = Source.single(ByteString("[]")))
+          )
         )
 
         val collector = system.actorOf(
           Props(
-            new HttpInjectedDefaultCollector(mockHttp,
-                                             Settings(Uri("http://localhost:333"),
-                                                      DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates))))
+            new HttpInjectedDefaultCollector(
+              mockHttp,
+              Settings(Uri("http://localhost:333"), DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates)
+            )
+          )
+        )
 
         val captor = ArgCaptor[HttpRequest]
         val probe  = TestProbe()
@@ -137,14 +150,18 @@ class DefaultCollectorSpec
 
         mockHttp.singleRequest(*, *, *, *) shouldReturn Future(
           HttpResponse(
-            entity = HttpEntity(contentType = ContentTypes.`application/json`, data = Source.single(ByteString("{}"))))
+            entity = HttpEntity(contentType = ContentTypes.`application/json`, data = Source.single(ByteString("{}")))
+          )
         )
 
         val collector = system.actorOf(
           Props(
-            new HttpInjectedDefaultCollector(mockHttp,
-                                             Settings(Uri("http://localhost:333"),
-                                                      DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates))))
+            new HttpInjectedDefaultCollector(
+              mockHttp,
+              Settings(Uri("http://localhost:333"), DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates)
+            )
+          )
+        )
 
         val captor = ArgCaptor[HttpRequest]
         val probe  = TestProbe()
@@ -167,9 +184,12 @@ class DefaultCollectorSpec
 
       val collector = system.actorOf(
         Props(
-          new HttpInjectedDefaultCollector(mockHttp,
-                                           Settings(Uri("http://localhost:333/validurl"),
-                                                    DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates))))
+          new HttpInjectedDefaultCollector(
+            mockHttp,
+            Settings(Uri("http://localhost:333/validurl"), DefaultCollector.unmarshalToPddl_1_2_MinimalPredicates)
+          )
+        )
+      )
 
       "return no message for 'get object' to the sender" in {
 

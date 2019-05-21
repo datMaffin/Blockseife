@@ -27,7 +27,7 @@ object IntervalScheduler {
 
   final case class Settings(
       executionUrl: Uri,
-      stepQueuingInterval: FiniteDuration,
+      stepQueuingInterval: FiniteDuration
   )
 
   // Intern messages
