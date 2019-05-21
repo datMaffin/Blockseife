@@ -5,8 +5,10 @@ import akka.stream.ActorMaterializer
 import akka.stream.scaladsl.Source
 import de.unistuttgart.iaas.stud.blockseife.Data.{RawDomain, RawProblem, SolverOutput, Step}
 import de.unistuttgart.iaas.stud.blockseife.actor.collector.DefaultCollector
+import de.unistuttgart.iaas.stud.blockseife.actor.collector
 import de.unistuttgart.iaas.stud.blockseife.actor.pipeline.Pipeline.Settings
-import de.unistuttgart.iaas.stud.blockseife.actor.planner._
+import de.unistuttgart.iaas.stud.blockseife.actor.planner
+import de.unistuttgart.iaas.stud.blockseife.actor.planner.{PostDPInstantlyPlanner, PostDPWithSolvePlanner}
 import de.unistuttgart.iaas.stud.blockseife.actor.scheduler.{IntervalScheduler, PreconditionCheckingScheduler}
 import de.unistuttgart.iaas.stud.blockseife.actor.{planner, scheduler}
 import de.unistuttgart.iaas.stud.blockseife.parser.ParsedDomain
@@ -14,6 +16,21 @@ import de.unistuttgart.iaas.stud.blockseife.parser.ParsedDomain
 import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
+import de.unistuttgart.iaas.stud.blockseife.actor.planner.CorrectIds
+import de.unistuttgart.iaas.stud.blockseife.actor.planner.IncorrectDomainAndProblemId
+import de.unistuttgart.iaas.stud.blockseife.actor.planner.IncorrectDomainId
+import de.unistuttgart.iaas.stud.blockseife.actor.planner.IncorrectProblemId
+import de.unistuttgart.iaas.stud.blockseife.actor.planner.WaitingForSolverResponse
+import de.unistuttgart.iaas.stud.blockseife.actor.planner.MissingDomain
+import de.unistuttgart.iaas.stud.blockseife.actor.planner.MissingProblem
+import de.unistuttgart.iaas.stud.blockseife.actor.planner.SuccessfulSolverResponse
+import de.unistuttgart.iaas.stud.blockseife.actor.planner.NoSuccessfulResponseOccurred
+import de.unistuttgart.iaas.stud.blockseife.actor.planner.MissingDomainAndProblem
+import de.unistuttgart.iaas.stud.blockseife.actor.pipeline.Pipeline.UseIntervalScheduler
+import de.unistuttgart.iaas.stud.blockseife.actor.pipeline.Pipeline.UsePreconditionCheckingScheduler
+import de.unistuttgart.iaas.stud.blockseife.actor.scheduler.FinishedRunning
+import de.unistuttgart.iaas.stud.blockseife.actor.scheduler.NotRunning
+import de.unistuttgart.iaas.stud.blockseife.actor.scheduler.Running
 
 object Pipeline {
   def props(pipelineSettings: Settings): Props =
@@ -40,20 +57,18 @@ object Pipeline {
   type CollectorActor = ActorRef
 
   sealed trait WhichCollector
-  final case class UseDefaultCollector(defaultCollectorSettings: DefaultCollector.Settings) extends WhichCollector
+  final case class UseDefaultCollector(s: DefaultCollector.Settings) extends WhichCollector
 
   sealed trait WhichPlanner
   final case class UsePostDPInstantlyPlanner(plannerSettings: PostDPInstantlyPlanner.Settings) extends WhichPlanner
   final case class UsePostDPWithSolvePlanner(plannerSettings: PostDPWithSolvePlanner.Settings) extends WhichPlanner
 
   sealed trait WhichScheduler
-  final case class UseIntervalScheduler(schedulerSettings: IntervalScheduler.Settings) extends WhichScheduler
-  final case class UsePreconditionCheckingScheduler(schedulerSettings: PreconditionCheckingScheduler.Settings)
-      extends WhichScheduler
+  final case class UseIntervalScheduler(s: IntervalScheduler.Settings)                         extends WhichScheduler
+  final case class UsePreconditionCheckingScheduler(s: PreconditionCheckingScheduler.Settings) extends WhichScheduler
 
   // Intern messages
-  case object StartPipeline
-  final case class SaveParsedDomain(parsedDomain: ParsedDomain)
+  case object NextPoll
 }
 
 class Pipeline(pipelineSettings: Settings) extends Actor with Timers with ActorLogging {
@@ -65,15 +80,21 @@ class Pipeline(pipelineSettings: Settings) extends Actor with Timers with ActorL
   private var collectorActor: ActorRef              = _
   private var plannerActor: ActorRef                = _
   private var maybeSchedulerActor: Option[ActorRef] = None
+  private val whichScheduler                        = pipelineSettings.schedulerSetting
 
   private val toProblemConverter = pipelineSettings.toProblemConverter
   private val toStepConverter    = pipelineSettings.toStepsConverter
 
   private val domainParser = pipelineSettings.domainParser
 
-  private var maybeRawDomain: Option[RawDomain]       = None
-  private var maybeParsedDomain: Option[ParsedDomain] = None
-  private var maybeGoal: Option[Goal]                 = None
+  private var maybeRawDomain: Option[RawDomain]                         = None
+  private var maybeEventuallyParsedDomain: Option[Future[ParsedDomain]] = None
+  private var maybeGoal: Option[Goal]                                   = None
+  private var maybeEventuallyRawProblem: Option[Future[RawProblem]]     = None
+
+  private var finishedPlannerPost = false
+  private var finishedSolving     = false
+  private var finishedScheduling  = false
 
   implicit val executionContext = context.dispatcher
   implicit val materializer     = ActorMaterializer()
@@ -82,9 +103,8 @@ class Pipeline(pipelineSettings: Settings) extends Actor with Timers with ActorL
 
     log.info("PreStart: Initializing actors...")
 
-    pipelineSettings.collectorSetting match {
-      case UseDefaultCollector(defaultCollectorSettings) =>
-        collectorActor = context.actorOf(DefaultCollector.props(defaultCollectorSettings))
+    collectorActor = pipelineSettings.collectorSetting match {
+      case UseDefaultCollector(s) => context.actorOf(DefaultCollector.props(s))
     }
 
     plannerActor = pipelineSettings.plannerSetting match {
@@ -96,56 +116,93 @@ class Pipeline(pipelineSettings: Settings) extends Actor with Timers with ActorL
   }
 
   override def receive: Receive = {
-    case Start =>
-      timers.startPeriodicTimer(StartPipeline, StartPipeline, 1.second)
-
-    case ParseDomain(rawDomain) =>
-      maybeRawDomain = Some(rawDomain)
-      domainParser(rawDomain).onComplete {
-        case Success(parsedDomain) => context.self ! SaveParsedDomain(parsedDomain)
-        case Failure(exception)    => // TODO: failed to parse domain
-      }
-
-    case SaveGoal(goal) =>
+    case Start(goal, rawDomain) =>
       maybeGoal = Some(goal)
+      maybeRawDomain = Some(rawDomain)
+      maybeEventuallyParsedDomain = Some(domainParser(rawDomain))
 
-    case StartPipeline =>
-      (maybeGoal, maybeParsedDomain, maybeRawDomain) match {
-        case (Some(goal), Some(parsedDomain), Some(rawDomain)) => // start the pipeline
-          plannerActor ! PostDomain(rawDomain, 0) // TODO: ids...
+      collectorActor ! collector.GetPredicatesState
 
-          toProblemConverter(goal, parsedDomain, collectorActor).onComplete({
-            case Success(value) =>
-              plannerActor ! PostProblem(value, 0) // TODO: ids...
-              plannerActor ! Solve
+    case collector.PredicatesState(predicates) =>
+      maybeEventuallyRawProblem = Some(
+        maybeEventuallyParsedDomain.get.map(toProblemConverter(maybeGoal.get, _, collectorActor)).flatten
+      )
 
-            case Failure(exception) => // TODO: failed to convert problem
-          })
+      timers.startPeriodicTimer(NextPoll, NextPoll, 1.second)
 
-          timers.cancelAll() // TODO: better handling for eventual missing messages
-
-        case _ => // not ready yet...
-
+    case NextPoll =>
+      if (!finishedPlannerPost) {
+        plannerActor ! planner.CheckIds(0, 0)
+      } else if (!finishedSolving) {
+        plannerActor ! planner.GetSolverResponse
+      } else if (!finishedScheduling) {
+        maybeSchedulerActor.get ! scheduler.GetStatus
       }
 
-    case SaveParsedDomain(parsedDomain) =>
-      maybeParsedDomain = Some(parsedDomain)
+    case idStatus: planner.IdStatus =>
+      idStatus match {
+        case CorrectIds => finishedPlannerPost = true
+        case IncorrectDomainAndProblemId(_, _) =>
+          plannerActor ! planner.PostDomain(maybeRawDomain.get, 0)
+          maybeEventuallyRawProblem.get.value match {
+            case Some(Success(rawProblem)) => plannerActor ! planner.PostProblem(rawProblem, 0)
+            case Some(Failure(f))          => // TODO: Error handling
+            case _                         => // do nothing; wait
+          }
 
-    case planner.SuccessfulSolverResponse(solverOutput) => // 2. step: Continue pipeline from solver
+        case IncorrectDomainId(_) =>
+          plannerActor ! planner.PostDomain(maybeRawDomain.get, 0)
 
-      maybeSchedulerActor = (pipelineSettings.schedulerSetting, maybeParsedDomain) match {
-        case (UseIntervalScheduler(s: IntervalScheduler.Settings), _) =>
-          Some(
-            context.actorOf(IntervalScheduler.props(toStepConverter(solverOutput), s))
-          )
-        case (UsePreconditionCheckingScheduler(s: PreconditionCheckingScheduler.Settings), Some(parsedDomain)) =>
-          Some(
-            context.actorOf(
-              PreconditionCheckingScheduler.props(collectorActor, toStepConverter(solverOutput), parsedDomain, s)
-            )
-          )
-        //case s @ UseRestScheduler(_, _)   => scheduler = context.actorOf(RestScheduler.props(s, collector))
+        case IncorrectProblemId(_) =>
+          maybeEventuallyRawProblem.get.value match {
+            case Some(Success(rawProblem)) => plannerActor ! planner.PostProblem(rawProblem, 0)
+            case Some(Failure(f))          => // TODO: Error handling
+            case _                         => // do nothing; wait
+          }
       }
-      maybeSchedulerActor.get ! scheduler.Start
+
+    case solverResponse: planner.SolverResponse =>
+      solverResponse match {
+        case WaitingForSolverResponse => // do nothing; wait
+        case MissingDomain            => // should not be possible
+        case MissingProblem           => // should not be possible
+        case MissingDomainAndProblem  => // should not be possible
+
+        case SuccessfulSolverResponse(solverOutput) =>
+          finishedSolving = true
+          whichScheduler match {
+            case UseIntervalScheduler(s) =>
+              maybeSchedulerActor = Some(context.actorOf(IntervalScheduler.props(toStepConverter(solverOutput), s)))
+
+            case UsePreconditionCheckingScheduler(s) =>
+              maybeSchedulerActor = maybeEventuallyParsedDomain.get.value match {
+                case Some(Success(parsedDomain)) =>
+                  // TODO: create an own poll for scheduler creation?
+                  Some(
+                    context.actorOf(
+                      PreconditionCheckingScheduler
+                        .props(collectorActor, toStepConverter(solverOutput), parsedDomain, s)
+                    )
+                  )
+                case Some(Failure(f)) => // TODO: Error handling
+                  finishedSolving = false
+                  None
+                case _ =>
+                  finishedSolving = false
+                  None // do nothing; wait
+              }
+
+          }
+
+        case NoSuccessfulResponseOccurred =>
+          plannerActor ! planner.Solve
+      }
+
+    case schedulerStatus: scheduler.Status =>
+      schedulerStatus match {
+        case FinishedRunning => context.parent ! Finished
+        case NotRunning      => maybeSchedulerActor.get ! scheduler.Start
+        case Running         => // do nothing
+      }
   }
 }
