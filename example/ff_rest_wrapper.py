@@ -35,7 +35,7 @@ def upload_file(save_as):
 
 
 def main():
-    app.run()
+    app.run(port=5002)
 
 
 if __name__ == '__main__':
