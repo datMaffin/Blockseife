@@ -1,8 +1,8 @@
 # Example
-In this folder are files and scripts for a small example of a running system.
+This folder contains files and scripts in relation to the small example implemented in the `Main.scala` app object.
 
 ## Description
-This example is demonstrating the automatic planning and execution.
+This example demonstrates the automatic planning and the corresponding execution.
 
 ## Howto
 1. Get a executable for the Fast Forward solver `ff` and put it into an folder 
