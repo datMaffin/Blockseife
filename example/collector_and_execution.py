@@ -62,7 +62,7 @@ def actionHandler():
             x, *_ = json['vars']
             x = x.lower()
 
-            actions[action](x)
+            actions[action.lower()](x)
 
         # TODO: Error handling
         return "OK"

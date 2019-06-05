@@ -173,7 +173,7 @@ package object parser {
                   )
                 ) // TODO: better error message
             }
-            .reduce((a1, a2) => Future.reduceLeft(List(a1, a2))(_ || _))
+            .fold(Future(false))((a1, a2) => Future.reduceLeft(List(a1, a2))(_ || _))
 
         case _ =>
           Future.failed(

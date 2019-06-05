@@ -1,7 +1,6 @@
 package de.unistuttgart.iaas.stud.blockseife.parser.domains.pddl._1._2.minimal
 
-import org.scalatest.WordSpec
-import org.scalatest.Matchers
+import org.scalatest.{Matchers, WordSpec}
 
 class DomainParserSpec extends WordSpec with Matchers {
   "The parser" should {
@@ -13,7 +12,7 @@ class DomainParserSpec extends WordSpec with Matchers {
         case Right(ast: DomainRoot) =>
           ast.name.name shouldBe "LIGHTING"
           ast.requireDef.get.requireKeys.size shouldBe 1
-          ast.requireDef.get.requireKeys(0) shouldBe ":STRIPS"
+          ast.requireDef.get.requireKeys.head shouldBe ":STRIPS"
 
         case _ => fail()
       }
@@ -32,10 +31,10 @@ class DomainParserSpec extends WordSpec with Matchers {
           ast.predicatesDef.get.atomicFormulaSkeletons.size shouldBe 2
           ast.predicatesDef.get.atomicFormulaSkeletons(0).predicate shouldBe "LIGHT_ON"
           ast.predicatesDef.get.atomicFormulaSkeletons(0).typedListOfVariables.size shouldBe 1
-          ast.predicatesDef.get.atomicFormulaSkeletons(0).typedListOfVariables(0).variable shouldBe "X"
+          ast.predicatesDef.get.atomicFormulaSkeletons(0).typedListOfVariables.head.variable shouldBe "X"
           ast.predicatesDef.get.atomicFormulaSkeletons(1).predicate shouldBe "SUN_LIGHT"
           ast.predicatesDef.get.atomicFormulaSkeletons(1).typedListOfVariables.size shouldBe 1
-          ast.predicatesDef.get.atomicFormulaSkeletons(1).typedListOfVariables(0).variable shouldBe "X"
+          ast.predicatesDef.get.atomicFormulaSkeletons(1).typedListOfVariables.head.variable shouldBe "X"
 
         case _ => fail()
       }
@@ -62,12 +61,12 @@ class DomainParserSpec extends WordSpec with Matchers {
 
         case Right(ast: DomainRoot) =>
           ast.structureDefs.size shouldBe 2
-          ast.structureDefs(0) match {
+          ast.structureDefs.head match {
             case ActionDef(actionFunctor, typedListVariable, body) =>
               actionFunctor shouldBe "SWITCH_LIGHT_ON"
 
               typedListVariable.size shouldBe 1
-              typedListVariable(0).variable shouldBe "X"
+              typedListVariable.head.variable shouldBe "X"
 
               body.preconditionGoalDescription.get match {
                 case AtomicFormulaTerms(predicate, terms) => fail()
@@ -75,7 +74,7 @@ class DomainParserSpec extends WordSpec with Matchers {
                 case NegatedAtomicFormulaTerms(predicate, terms) =>
                   predicate shouldBe "LIGHT_ON"
                   terms.size shouldBe 1
-                  terms(0) match {
+                  terms.head match {
                     case Name(name)         => fail()
                     case Variable(variable) => variable shouldBe "X"
                   }
@@ -85,7 +84,7 @@ class DomainParserSpec extends WordSpec with Matchers {
                 case AtomicFormulaTerms(predicate, terms) =>
                   predicate shouldBe "LIGHT_ON"
                   terms.size shouldBe 1
-                  terms(0) match {
+                  terms.head match {
                     case Name(name)         => fail()
                     case Variable(variable) => variable shouldBe "X"
                   }
@@ -100,13 +99,13 @@ class DomainParserSpec extends WordSpec with Matchers {
               actionFunctor shouldBe "SWITCH_LIGHT_OFF"
 
               typedListVariable.size shouldBe 1
-              typedListVariable(0).variable shouldBe "X"
+              typedListVariable.head.variable shouldBe "X"
 
               body.preconditionGoalDescription.get match {
                 case AtomicFormulaTerms(predicate, terms) =>
                   predicate shouldBe "LIGHT_ON"
                   terms.size shouldBe 1
-                  terms(0) match {
+                  terms.head match {
                     case Name(name)         => fail()
                     case Variable(variable) => variable shouldBe "X"
                   }
@@ -120,7 +119,7 @@ class DomainParserSpec extends WordSpec with Matchers {
                 case NegatedAtomicFormulaTerms(predicate, terms) =>
                   predicate shouldBe "LIGHT_ON"
                   terms.size shouldBe 1
-                  terms(0) match {
+                  terms.head match {
                     case Name(name)         => fail()
                     case Variable(variable) => variable shouldBe "X"
                   }

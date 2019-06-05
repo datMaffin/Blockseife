@@ -137,6 +137,9 @@ class Pipeline(pipelineSettings: Settings) extends Actor with Timers with ActorL
         plannerActor ! planner.GetSolverResponse
       } else if (!finishedScheduling) {
         maybeSchedulerActor.get ! scheduler.GetStatus
+      } else {
+        log.info("Pipeline actor finished and stops now itself and its children")
+        context.stop(self)
       }
 
     case idStatus: planner.IdStatus =>
@@ -200,9 +203,11 @@ class Pipeline(pipelineSettings: Settings) extends Actor with Timers with ActorL
 
     case schedulerStatus: scheduler.Status =>
       schedulerStatus match {
-        case FinishedRunning => context.parent ! Finished
-        case NotRunning      => maybeSchedulerActor.get ! scheduler.Start
-        case Running         => // do nothing
+        case NotRunning => maybeSchedulerActor.get ! scheduler.Start
+        case Running    => // do nothing
+        case FinishedRunning =>
+          context.parent ! Finished // TODO: Ensure that parent receives message
+          finishedScheduling = true
       }
   }
 }
